@@ -1,0 +1,58 @@
+/*
+  Design tokens — the single source of truth for color, type and spacing.
+  Every hardcoded value elsewhere in the CSS should trace back to one of these.
+*/
+:root {
+  /* Color */
+  --color-bg: #f5f3ee;
+  --color-text: #111111;
+  --color-text-secondary: #70706b;
+  --color-border: rgba(17, 17, 17, 0.12);
+  --color-accent: #3a55c9;
+  --color-accent-soft: rgba(58, 85, 201, 0.12);
+  --color-orb: #f4ead8;
+
+  /* Type — Inter carries body/UI; Fraunces (a warm editorial serif with an
+     optical-size axis) carries every heading/kicker via --font-display.
+     Using one typeface for both was reading as templated — a real display
+     pairing is one of the highest-leverage single changes for "premium". */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  --fs-hero: clamp(3rem, 9vw, 8rem);
+  --fs-h1: clamp(2.25rem, 5vw, 4.5rem);
+  --fs-h2: clamp(1.5rem, 3vw, 2.5rem);
+  --fs-body: clamp(1rem, 1.1vw, 1.125rem);
+  --fs-small: 0.8125rem;
+  --fs-micro: 0.6875rem;
+
+  --lh-tight: 1.02;
+  --lh-normal: 1.5;
+  --ls-tight: -0.02em;
+  --ls-wide: 0.08em;
+  --ls-wider: 0.16em;
+
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: 4rem;
+  --space-xl: 8rem;
+
+  /* Layout */
+  --edge-padding: clamp(1.25rem, 4vw, 3rem);
+  --content-max: 1400px;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-power3: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --dur-fast: 0.3s;
+  --dur-medium: 0.6s;
+  --dur-slow: 1s;
+
+  --z-texture: 0;
+  --z-canvas: 1;
+  --z-content: 2;
+  --z-chrome: 10;
+  --z-overlay: 20;
+}

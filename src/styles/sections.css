@@ -1,0 +1,931 @@
+/*
+ * Section heights come from CSS custom properties set at runtime by
+ * JourneyContext (--vh-hero, --vh-about, ...), derived from the exact same
+ * numbers config/journey.js uses to compute progress milestones. Never
+ * hardcode a section's height here — it would silently drift from the 3D
+ * timeline.
+ */
+.section {
+  position: relative;
+  width: 100%;
+  padding: 0 var(--edge-padding);
+}
+
+.section--hero {
+  min-height: var(--vh-hero, 100vh);
+}
+.section--about {
+  min-height: var(--vh-about, 320vh);
+}
+.section--work {
+  min-height: var(--vh-work, 90vh);
+}
+.section--cuerates {
+  min-height: var(--vh-cuerates, 140vh);
+}
+.section--autotrack {
+  min-height: var(--vh-autotrack, 140vh);
+}
+.section--apple3d {
+  min-height: var(--vh-apple3d, 140vh);
+}
+.section--signature {
+  min-height: var(--vh-signature, 100vh);
+}
+.section--skills {
+  min-height: var(--vh-skills, 110vh);
+}
+.section--contact {
+  min-height: var(--vh-contact, 120vh);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Shared typography / layout primitives                                   */
+/* ---------------------------------------------------------------------- */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.heading-xl {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text);
+}
+
+/* Hero's name mask-reveal: .line-mask clips, .line is what GSAP moves
+   (yPercent 110 -> 0) — the words rise up from behind their own line
+   rather than fading into existence. */
+.line-mask {
+  display: block;
+  overflow: hidden;
+}
+
+.line-mask .line {
+  display: block;
+}
+
+.heading-lg {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-h1);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text);
+}
+
+.lead {
+  font-size: var(--fs-h2);
+  line-height: 1.3;
+  font-weight: 500;
+  color: var(--color-text);
+  max-width: 20ch;
+}
+
+.body-copy {
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--color-text-secondary);
+  max-width: 38ch;
+}
+
+/* A quiet editorial flourish on About's opening paragraph only (see the
+   .about__content-bottom scope) — a drop cap in the display serif, echoing
+   the site's own kicker numerals rather than a generic "01." template. */
+.about__content-bottom .body-copy::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.4em;
+  line-height: 0.82;
+  padding-right: 0.08em;
+  padding-top: 0.05em;
+  color: var(--color-accent);
+}
+
+/* Default-hidden; entrance JS reveals via gsap. Safety net against a flash
+   of fully-visible content before the entrance timeline runs. */
+.js-reveal {
+  opacity: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Chrome: nav + progress                                                  */
+/* ---------------------------------------------------------------------- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-chrome);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--edge-padding);
+  pointer-events: none;
+}
+
+/* Soft fade so scrolled-past content doesn't visually collide with the
+   fixed mark/progress readout — subtle on purpose, not a hard bar. */
+.nav::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 220%;
+  background: linear-gradient(to bottom, var(--color-bg) 0%, var(--color-bg) 30%, transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.nav__mark,
+.nav__trigger {
+  pointer-events: auto;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: var(--ls-wide);
+  color: var(--color-text);
+}
+
+.nav__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  font: inherit;
+  font-family: var(--font-sans);
+}
+
+.nav__progress {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.nav__menu-label {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  transition: color var(--dur-fast) var(--ease-out-power3);
+}
+
+.nav__trigger:hover .nav__menu-label,
+.nav__trigger:focus-visible .nav__menu-label {
+  color: var(--color-text);
+}
+
+.nav__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  transition: transform var(--dur-fast) var(--ease-out-power3);
+}
+
+.nav__trigger:hover .nav__dot,
+.nav__trigger:focus-visible .nav__dot {
+  transform: scale(1.6);
+}
+
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--edge-padding);
+}
+
+.nav-overlay__close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--edge-padding);
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  color: var(--color-text-secondary);
+}
+
+.nav-overlay__link {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text);
+  transition: color var(--dur-fast) var(--ease-out-power3), transform var(--dur-fast) var(--ease-out-power3);
+}
+
+.nav-overlay__link:hover,
+.nav-overlay__link:focus-visible {
+  color: var(--color-accent);
+  transform: translateX(0.3em);
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.loader__label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-h2);
+  letter-spacing: var(--ls-wide);
+  color: var(--color-text);
+}
+
+.loader__line {
+  display: block;
+  width: 120px;
+  height: 1px;
+  background: var(--color-accent);
+  transform-origin: left center;
+}
+
+/* ---------------------------------------------------------------------- */
+/* WebGL fallback (components/FallbackVisual.jsx)                          */
+/* ---------------------------------------------------------------------- */
+.fallback-visual {
+  position: fixed;
+  top: 18vh;
+  right: clamp(1.5rem, 12vw, 14rem);
+  z-index: var(--z-canvas);
+  pointer-events: none;
+}
+
+.fallback-visual__orb {
+  width: min(14vw, 130px);
+  height: min(14vw, 130px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fbfaf6, var(--color-orb) 55%, #b9b6ab 100%);
+  box-shadow: 0 30px 50px -20px rgba(17, 17, 17, 0.25);
+  animation: fallback-orb-float 6s ease-in-out infinite;
+}
+
+.fallback-visual__thread {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 60vh;
+  background: linear-gradient(to bottom, var(--color-accent) 0%, transparent 90%);
+  opacity: 0.15;
+}
+
+@keyframes fallback-orb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fallback-visual__orb {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hero                                                                     */
+/* ---------------------------------------------------------------------- */
+/* Bleeds off the top-right corner at near-zero opacity — atmosphere, not
+   content (see the entrance comment in Hero.jsx). Positioned absolutely
+   against the sticky .hero__content's containing block so it holds still
+   like the rest of the hero while pinned. Hidden on mobile: there's no
+   spare width to bleed a numeral off there, and the orb already claims
+   that vertical band (see the mobile note below). */
+.hero__numeral {
+  position: absolute;
+  top: -4vw;
+  right: -2vw;
+  z-index: -1;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(14rem, 32vw, 34rem);
+  line-height: 1;
+  color: var(--color-text);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 780px) {
+  .hero__numeral {
+    display: none;
+  }
+}
+
+.hero__content {
+  position: sticky;
+  top: 0;
+  min-height: var(--vh-hero, 100vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.hero__top,
+.hero__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* The orb sits roughly screen-centered here too (camera.lookAt always
+   re-centers its target — see the note in journey.js). Desktop has room to
+   its side so name/roles/supporting can stay grouped tight in the center.
+   Mobile doesn't, so name goes up top and roles/supporting go to the
+   bottom, leaving the vertical-center band clear for the orb to float in. */
+@media (max-width: 780px) {
+  .hero__content {
+    justify-content: space-between;
+    padding: 14vh 0;
+  }
+}
+
+.hero__greeting {
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.hero__name {
+  margin: var(--space-xs) 0;
+}
+
+.hero__roles {
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* Rolodex cycle — .hero__roles--cycle clips to one line, .hero__roles-track
+   is what GSAP moves (yPercent, see Hero.jsx), stacked items share its
+   height so each -33.333% step lands exactly on the next role. */
+.hero__roles--cycle {
+  overflow: hidden;
+  height: 1.5em;
+}
+
+.hero__roles-track {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero__roles-item {
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+}
+
+.hero__supporting {
+  max-width: 32ch;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-body);
+}
+
+.hero__scroll-hint {
+  position: absolute;
+  bottom: var(--space-lg);
+  left: var(--edge-padding);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.hero__scroll-hint-arrow {
+  display: inline-block;
+  animation: hero-scroll-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes hero-scroll-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* About — one pinned 100vh stage. Two layers that never compete: a        */
+/* stable content column, and DESIGN/CODE/MOTION/EXPERIMENTATION pinned to */
+/* the corners as low-opacity atmosphere (see About.jsx).                  */
+/* ---------------------------------------------------------------------- */
+.about__stage {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.about__content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+  max-width: 32ch;
+  padding: 0 var(--edge-padding);
+}
+
+.about__content-top,
+.about__content-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.about__content .heading-lg {
+  max-width: 16ch;
+}
+
+.about__content .lead {
+  margin-top: var(--space-xs);
+}
+
+/* The orb sits roughly screen-centered here too (see the note on
+   .hero__content) — desktop has a fixed-left column so it never matters,
+   but mobile's content runs full-width, so push the two groups apart to
+   leave the vertical-center band clear for it. */
+@media (max-width: 780px) {
+  .about__content {
+    justify-content: space-between;
+    max-width: none;
+    padding-top: 12vh;
+    padding-bottom: 10vh;
+  }
+}
+
+.about__atmosphere {
+  position: absolute;
+  inset: 0;
+}
+
+.about__word {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.25rem, 6vw, 5.5rem);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text-secondary);
+  opacity: 0.12;
+  white-space: nowrap;
+}
+
+/* All four live in the right ~45% of the stage, in their own vertical
+   bands, so they never overlap the fixed-left content column, and never
+   overlap each other even though all four can be faintly visible at once. */
+.about__word--0 {
+  top: 8%;
+  left: 56%;
+}
+.about__word--1 {
+  top: 27%;
+  right: 4%;
+  text-align: right;
+}
+.about__word--2 {
+  bottom: 36%;
+  right: 12%;
+  text-align: right;
+}
+.about__word--3 {
+  bottom: 4%;
+  right: -2%;
+  text-align: right;
+}
+
+@media (max-width: 780px) {
+  .about__word {
+    font-size: clamp(1.25rem, 7vw, 2.25rem);
+  }
+  /* Stacked at different heights rather than opposite corners — on a
+     narrow screen two corner-anchored words can still be wide enough to
+     meet in the middle. */
+  .about__word--0 {
+    top: 3%;
+    left: 6%;
+    right: auto;
+  }
+  .about__word--1 {
+    top: 13%;
+    right: 6%;
+    left: auto;
+    text-align: right;
+  }
+  .about__word--2 {
+    bottom: 13%;
+    right: 6%;
+    left: auto;
+    text-align: right;
+  }
+  .about__word--3 {
+    bottom: 3%;
+    right: -2%;
+    left: auto;
+    text-align: right;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Work intro                                                              */
+/* ---------------------------------------------------------------------- */
+.work__intro {
+  min-height: var(--vh-work, 90vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Projects                                                                 */
+/* ---------------------------------------------------------------------- */
+.project {
+  display: flex;
+  align-items: center;
+}
+
+.project__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Wide on purpose: the orb reads as roughly screen-centered wherever the
+     journey curve is at this scroll position (see the note on
+     CAMERA_KEYFRAMES_DESKTOP in journey.js — camera.lookAt() always
+     re-centers its target, so this can't be fixed from the camera side).
+     This gutter is sized to give it clear room between the two columns. */
+  gap: clamp(9rem, 24vw, 21.5rem);
+  align-items: center;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.project__media {
+  position: relative;
+  order: 1;
+}
+.project__text {
+  order: 2;
+}
+
+.project__cursor-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #f5f3ee;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out-power3);
+  will-change: transform;
+}
+
+.project__cursor-label.is-visible {
+  opacity: 1;
+}
+.project--reverse .project__media {
+  order: 2;
+}
+.project--reverse .project__text {
+  order: 1;
+}
+
+.project__media-frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #e9e6de;
+  clip-path: inset(6% 0 6% 0);
+}
+
+.project__media-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.04);
+  /* Grayscale + a faint cobalt cast at rest, full color on hover/focus —
+     keeps project photography inside the site's own palette instead of
+     letting arbitrary photo colors fight the paper/cobalt restraint, and
+     resolving to color reads as a small reward for engaging with the work. */
+  filter: grayscale(0.85) sepia(0.12) hue-rotate(178deg) saturate(1.3) contrast(1.02);
+  transition: filter var(--dur-medium) var(--ease-out-power3);
+}
+
+.project__media:hover .project__media-frame img,
+.project__media:focus-within .project__media-frame img {
+  filter: grayscale(0) sepia(0) saturate(1) contrast(1);
+}
+
+.project__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: linear-gradient(135deg, #eae7df, #e2ded3);
+}
+
+.project__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.project__index {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  color: var(--color-text-secondary);
+}
+
+.project__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: var(--ls-tight);
+  margin: var(--space-xs) 0;
+}
+
+.project__desc {
+  color: var(--color-text-secondary);
+  max-width: 36ch;
+}
+
+.project__meta {
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.project__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text);
+  margin-top: var(--space-xs);
+  width: fit-content;
+}
+
+.project__link-arrow {
+  display: inline-block;
+  color: var(--color-accent);
+  transition: transform var(--dur-fast) var(--ease-out-power3);
+}
+
+.project__link:hover .project__link-arrow,
+.project__link:focus-visible .project__link-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 780px) {
+  .project__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+  .project__media,
+  .project--reverse .project__media {
+    order: 1;
+  }
+  .project__text,
+  .project--reverse .project__text {
+    order: 2;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Signature reveal                                                         */
+/* ---------------------------------------------------------------------- */
+/* Deliberately not centered and deliberately small — the event here is
+   the camera pull-back + full thread reveal happening in 3D, not this
+   text. A quiet caption in the corner, not competing for the eye. */
+.section--signature {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: var(--space-lg);
+}
+
+.signature__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  max-width: 26ch;
+}
+
+.signature__kicker {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.signature__line {
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--ls-wide);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Skills                                                                   */
+/* ---------------------------------------------------------------------- */
+.skills__inner {
+  min-height: var(--vh-skills, 110vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.skills__groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+  /* Narrower than content-max and left-aligned (not centered) on purpose:
+     the orb sits roughly screen-centered through this section (see the
+     equivalent note on .project__inner) — clustering the columns left
+     leaves it clear space on the right rather than landing inside a
+     column. */
+  max-width: 62%;
+}
+
+.skills__group-title {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  opacity: 0.55;
+  margin-bottom: var(--space-sm);
+  transition: opacity var(--dur-medium) var(--ease-out-power3);
+}
+
+.skills__group-list li {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: var(--color-text);
+  padding: 0.35em 0;
+  border-top: 1px solid var(--color-border);
+  transition: border-color var(--dur-medium) var(--ease-out-power3), padding-left var(--dur-medium) var(--ease-out-power3);
+}
+
+.skills__group-list li:last-child {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Echoes the orb's material story (see journey.js getActiveSkillsGroup) —
+   the group the orb is currently "near" gets a quiet emphasis: its title
+   reaches full accent strength and its dividers pick up a faint cobalt
+   tint, rather than a competing effect appearing out of nowhere. */
+.skills__group.is-active .skills__group-title {
+  opacity: 1;
+}
+
+.skills__group.is-active .skills__group-list li {
+  border-color: var(--color-accent-soft);
+  padding-left: 0.4em;
+}
+
+@media (max-width: 780px) {
+  .skills__groups {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    gap: var(--space-lg);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Contact                                                                  */
+/* ---------------------------------------------------------------------- */
+.contact__inner {
+  min-height: var(--vh-contact, 120vh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.contact__headline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: end;
+}
+
+.contact__sub {
+  color: var(--color-text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.contact__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-top: var(--space-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text);
+}
+
+.contact__cta-arrow {
+  display: inline-block;
+  color: var(--color-accent);
+  transition: transform var(--dur-fast) var(--ease-out-power3);
+}
+
+.contact__cta:hover .contact__cta-arrow,
+.contact__cta:focus-visible .contact__cta-arrow {
+  transform: translateX(6px);
+}
+
+.contact__links {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.contact__links a {
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  transition: color var(--dur-fast) var(--ease-out-power3);
+}
+
+.contact__links a:hover,
+.contact__links a:focus-visible {
+  color: var(--color-accent);
+}
+
+.contact__footer {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--space-md);
+  font-size: var(--fs-micro);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 780px) {
+  .contact__headline {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+  /* The orb settles near the CTA here by design (see the brief), but on a
+     narrow single column it can land on "Let's make something." — give it
+     room without losing the intended proximity to GET IN TOUCH. */
+  .contact__sub {
+    margin-bottom: 8rem;
+  }
+}
+
+/* Temporary scaffolding marker, removed once real content lands. */
+.section__debug-label {
+  position: sticky;
+  top: 50%;
+  font: 12px/1 monospace;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}

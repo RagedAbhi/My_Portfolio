@@ -1,0 +1,147 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--color-bg);
+  color-scheme: light;
+  /* A default browser scrollbar is exactly the kind of unstyled chrome
+     that breaks the illusion everything on the page was considered —
+     slimmed and tinted to the palette rather than left at defaults. */
+  scrollbar-color: var(--color-accent-soft) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent-soft);
+  border-radius: 999px;
+  border: 2px solid var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(58, 85, 201, 0.22);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+#root {
+  position: relative;
+  width: 100%;
+}
+
+/*
+ * A faint, fixed grain layer behind everything else (see --z-texture) —
+ * gives the flat paper background a physical, printed quality. The pattern
+ * itself never moves or resizes; only its background-position pans as the
+ * page scrolls (see BackgroundTexture.jsx), which is what a repeating tile
+ * allows: panning it can never reveal an edge or a gap, unlike translating
+ * the whole element would. Monochrome noise only — no new hue, matching
+ * the site's single-accent-color rule.
+ */
+.bg-texture {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-texture);
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  opacity: 0.14;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* A brief "breath" exactly when scroll crosses into a new section — see
+   BackgroundTexture.jsx. Same layer, no new effect. */
+@keyframes bg-texture-pulse {
+  0% {
+    opacity: 0.14;
+  }
+  35% {
+    opacity: 0.26;
+  }
+  100% {
+    opacity: 0.14;
+  }
+}
+
+.bg-texture.is-pulsing {
+  animation: bg-texture-pulse 0.9s var(--ease-out-power3);
+}
+
+/* The R3F canvas sits fixed behind all DOM content as a visual layer. */
+.scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+}
+
+.content-layer {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
