@@ -7,9 +7,12 @@ import { useJourney } from '../state/JourneyContext';
 // (it's a transition within the journey, not a destination of its own —
 // see the note in journey.js about its timing).
 const GROUPS = [
-  { label: 'Intro', sections: ['hero'] },
+  { label: 'Home', sections: ['hero'] },
   { label: 'About', sections: ['about'] },
-  { label: 'Work', sections: ['work', 'cuerates', 'autotrack', 'apple3d', 'signature', 'skills'] },
+  { label: 'Experience & Education', sections: ['experience'] },
+  { label: 'Projects', sections: ['work', 'cuerates', 'autotrack', 'apple3d'] },
+  { label: 'Skills', sections: ['skills'] },
+  { label: 'Beyond the Work', sections: ['beyondWork'] },
   { label: 'Contact', sections: ['contact'] },
 ];
 
@@ -29,19 +32,58 @@ export function ScrollProgress() {
   const [groupIndex, setGroupIndex] = useState(0);
   const lastIndex = useRef(0);
 
+  const updateIndex = (idx) => {
+    if (idx !== -1 && idx !== lastIndex.current) {
+      lastIndex.current = idx;
+      setGroupIndex(idx);
+    }
+  };
+
   useEffect(() => {
+    // 1. IntersectionObserver for direct DOM viewport accuracy
+    const allSectionIds = [
+      'hero',
+      'about',
+      'experience',
+      'work',
+      'cuerates',
+      'autotrack',
+      'apple3d',
+      'skills',
+      'beyondWork',
+      'contact',
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.find((e) => e.isIntersecting);
+        if (visible) {
+          const id = visible.target.id;
+          const idx = GROUPS.findIndex((g) => g.sections.includes(id));
+          updateIndex(idx);
+        }
+      },
+      { rootMargin: '-30% 0px -30% 0px', threshold: 0.05 }
+    );
+
+    allSectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    // 2. Scroll state subscription fallback
     const unsub = subscribeScroll(({ progress }) => {
       const idx = groupIndexForProgress(progress, sections);
-      if (idx !== lastIndex.current) {
-        lastIndex.current = idx;
-        setGroupIndex(idx);
-      }
+      updateIndex(idx);
     });
-    // Sync once on mount/section-set change in case progress was already > 0.
-    const idx = groupIndexForProgress(scrollState.progress, sections);
-    lastIndex.current = idx;
-    setGroupIndex(idx);
-    return unsub;
+
+    const initialIdx = groupIndexForProgress(scrollState.progress, sections);
+    updateIndex(initialIdx);
+
+    return () => {
+      observer.disconnect();
+      unsub();
+    };
   }, [sections]);
 
   return (

@@ -17,6 +17,9 @@
 .section--about {
   min-height: var(--vh-about, 320vh);
 }
+.section--experience {
+  min-height: var(--vh-experience, 160vh);
+}
 .section--work {
   min-height: var(--vh-work, 90vh);
 }
@@ -29,11 +32,11 @@
 .section--apple3d {
   min-height: var(--vh-apple3d, 140vh);
 }
-.section--signature {
-  min-height: var(--vh-signature, 100vh);
-}
 .section--skills {
   min-height: var(--vh-skills, 110vh);
+}
+.section--beyondWork {
+  min-height: var(--vh-beyondWork, 130vh);
 }
 .section--contact {
   min-height: var(--vh-contact, 120vh);
@@ -913,11 +916,174 @@
     grid-template-columns: 1fr;
     gap: var(--space-md);
   }
-  /* The orb settles near the CTA here by design (see the brief), but on a
-     narrow single column it can land on "Let's make something." — give it
-     room without losing the intended proximity to GET IN TOUCH. */
   .contact__sub {
     margin-bottom: 8rem;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Experience & Education Section                                          */
+/* ---------------------------------------------------------------------- */
+.experience__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-lg);
+  min-height: var(--vh-experience, 160vh);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.experience__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 44ch;
+}
+
+.experience__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 54ch;
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--space-md);
+  margin-left: var(--space-xs);
+}
+
+.experience__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.experience__group-label {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+}
+
+.experience__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  position: relative;
+}
+
+.experience__item::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--space-md) - 4.5px);
+  top: 0.4em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+.experience__period {
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wide);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.experience__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.5vw, 1.875rem);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: var(--lh-tight);
+}
+
+.experience__company {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.experience__desc {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-normal);
+  max-width: 40ch;
+}
+
+.experience__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.experience__tag {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Beyond the Work Section                                                 */
+/* ---------------------------------------------------------------------- */
+.beyondWork__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-xl);
+  min-height: var(--vh-beyondWork, 130vh);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.beyondWork__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 48ch;
+}
+
+.beyondWork__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.beyondWork__interest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-sm);
+}
+
+.beyondWork__interest-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+  color: var(--color-text);
+}
+
+.beyondWork__interest-desc {
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+  line-height: var(--lh-normal);
+  max-width: 32ch;
+}
+
+@media (max-width: 780px) {
+  .beyondWork__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 }
 

@@ -253,6 +253,9 @@ export function Orb({ reducedMotion = false }) {
     // it spins, rather than staying aligned with it.
     invRotation: new THREE.Quaternion(),
     localTravelDir: new THREE.Vector3(),
+    activeAnchorId: null,
+    awarenessTimer: 0,
+    targetDir: new THREE.Vector3(),
     initialized: false,
     // Material story — current values the material is damping toward its
     // target each frame (see the block after the position update below).
@@ -440,10 +443,20 @@ nonPerturbedNormal = normal;`
     // --- 2. curve target + cursor offset + project gravity -----------------
     curve.getPointAt(p, state.target);
 
+    // Dynamic project anchor gravity pull
+    let gravityWeight = 0;
+    for (let i = 0; i < PROJECT_ANCHORS.length; i++) {
+      const anchor = PROJECT_ANCHORS[i];
+      const dist = Math.abs(p - anchor.p);
+      if (dist < anchor.radius) {
+        const w = 1 - dist / anchor.radius;
+        gravityWeight = Math.max(gravityWeight, w);
+        curve.getPointAt(anchor.p, state.anchorScratch);
+        state.target.x += (state.anchorScratch.x - state.target.x) * w * SPRING.gravityStrength;
+      }
+    }
+
     if (!reducedMotion) {
-      // Cursor influence: a small, clamped nudge toward the pointer. Uses
-      // NDC directly rather than a full unproject/raycast — this is meant
-      // to read as a hint of attention, not literal pointer tracking.
       const cursorTargetX = pointerState.active ? pointerState.ndcX * SPRING.cursorInfluence : 0;
       const cursorTargetY = pointerState.active ? pointerState.ndcY * SPRING.cursorInfluence : 0;
       state.cursorOffset.x = THREE.MathUtils.damp(state.cursorOffset.x, cursorTargetX, SPRING.cursorLambda, dt);
@@ -452,39 +465,32 @@ nonPerturbedNormal = normal;`
       state.target.y += state.cursorOffset.y;
     }
 
-    // Project gravity: within an anchor's radius, pull the target toward
-    // the project's exact point on the curve and soften the spring so the
-    // orb settles rather than overshoots past it — "discovers", not clicks.
-    let gravityWeight = 0;
-    if (!reducedMotion) {
-      for (let i = 0; i < PROJECT_ANCHORS.length; i++) {
-        const anchor = PROJECT_ANCHORS[i];
-        const dist = Math.abs(p - anchor.p);
-        if (dist < anchor.radius) {
-          const w = 1 - dist / anchor.radius;
-          gravityWeight = Math.max(gravityWeight, w);
-          curve.getPointAt(anchor.p, state.anchorScratch);
-          state.target.x += (state.anchorScratch.x - state.target.x) * w * SPRING.gravityStrength;
-        }
-      }
+    // Section transition detection for awareness reaction
+    const currentSectionIndex = Math.floor(p * 10);
+    if (state.activeAnchorId !== currentSectionIndex) {
+      state.activeAnchorId = currentSectionIndex;
+      state.awarenessTimer = 0.22;
+      state.targetDir.subVectors(state.target, state.pos).normalize();
     }
 
-    if (!state.initialized) {
-      // First frame ever: snap instead of animating in from the origin,
-      // regardless of motion mode.
+    if (!state.initialized || isNaN(state.pos.x)) {
       state.pos.copy(state.target);
       state.vel.set(0, 0, 0);
       state.initialized = true;
     } else if (reducedMotion) {
-      // No spring bounce/overshoot — a calm, non-oscillating follow. The
-      // orb still tracks scroll position (it's part of how the page
-      // communicates progress), just without any of the "excessive"
-      // motion prefers-reduced-motion asks to avoid.
-      state.pos.x = THREE.MathUtils.damp(state.pos.x, state.target.x, 4, dt);
-      state.pos.y = THREE.MathUtils.damp(state.pos.y, state.target.y, 4, dt);
-      state.pos.z = THREE.MathUtils.damp(state.pos.z, state.target.z, 4, dt);
+      state.pos.x = THREE.MathUtils.damp(state.pos.x, state.target.x, 3.5, dt);
+      state.pos.y = THREE.MathUtils.damp(state.pos.y, state.target.y, 3.5, dt);
+      state.pos.z = THREE.MathUtils.damp(state.pos.z, state.target.z, 3.5, dt);
     } else {
-      // --- damped spring toward target ---------------------------------
+      // 220ms Awareness tilt executed concurrently alongside velocity integration
+      if (state.awarenessTimer > 0) {
+        state.awarenessTimer -= dt;
+        mesh.rotation.z = THREE.MathUtils.damp(mesh.rotation.z, (state.targetDir.x || 0.5) * 0.25, 8, dt);
+      } else {
+        mesh.rotation.z = THREE.MathUtils.damp(mesh.rotation.z, 0, 4, dt);
+      }
+
+      // Continuous momentum steering physics (never pauses or snaps velocity)
       const effectiveDamping = SPRING.damping * (1 + gravityWeight * 1.5);
       const dx = state.target.x - state.pos.x;
       const dy = state.target.y - state.pos.y;
@@ -497,8 +503,19 @@ nonPerturbedNormal = normal;`
       state.pos.z += state.vel.z * dt;
     }
 
-    mesh.position.copy(state.pos);
-    orbState.position.copy(state.pos);
+    // Subtle idle vertical breathing & rotation drift when settled
+    const isSettled = state.vel.length() < 0.06;
+    let idleY = 0;
+    if (isSettled && !reducedMotion) {
+      const time = performance.now() * 0.002;
+      idleY = Math.sin(time) * 0.04; // 0.04 units breathing float
+      mesh.rotation.y += dt * 0.25;
+    }
+
+    if (!isNaN(state.pos.x) && !isNaN(state.pos.y) && !isNaN(state.pos.z)) {
+      mesh.position.set(state.pos.x, state.pos.y + idleY, state.pos.z);
+      orbState.position.copy(mesh.position);
+    }
 
     // --- rolling rotation: arc length traveled / radius --------------------
     // A pure function of `p`, exactly like everything else here — scrolling

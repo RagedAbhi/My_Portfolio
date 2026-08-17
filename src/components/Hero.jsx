@@ -2,15 +2,9 @@ import { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { site } from '../data/site';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { useTilt } from '../hooks/useTilt';
 
 /*
- * Hero — the only section with a non-scroll-linked entrance: a staggered
- * timeline that plays once on load (background is already visible via the
- * page's own CSS, so it isn't a separate step). Timing follows the brief's
- * cinematic stagger: name -> roles -> supporting copy -> scroll hint.
- * A second, scroll-linked timeline fades the content out as the user
- * scrolls past it, so the hero recedes rather than cutting off abruptly.
+ * Hero — staggered timeline entrance.
  */
 const ROLES = site.roles.split(' · ');
 
@@ -18,7 +12,6 @@ export function Hero() {
   const rootRef = useRef(null);
   const rolesTrackRef = useRef(null);
   const reducedMotion = useReducedMotion();
-  const tiltRef = useTilt({ maxTilt: 3 });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -89,7 +82,7 @@ export function Hero() {
       <p className="hero__numeral js-reveal" aria-hidden="true">
         01
       </p>
-      <div className="hero__content" ref={tiltRef}>
+      <div className="hero__content">
         <div className="hero__top">
           <p className="hero__greeting js-reveal">{site.hero.greeting}</p>
           <h1 className="heading-xl hero__name">

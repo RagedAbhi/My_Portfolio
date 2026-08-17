@@ -10,10 +10,11 @@ import { Loader } from './components/Loader';
 import { Navigation } from './components/Navigation';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
+import { Experience } from './components/Experience';
 import { Work } from './components/Work';
 import { Project } from './components/Project';
-import { Signature } from './components/Signature';
 import { Skills } from './components/Skills';
+import { BeyondWork } from './components/BeyondWork';
 import { Contact } from './components/Contact';
 import { FallbackVisual } from './components/FallbackVisual';
 import { projects } from './data/projects';
@@ -36,13 +37,14 @@ function Journey() {
       <div className="content-layer">
         <Hero />
         <About />
+        <Experience />
         <Work />
         {projects.map((project) => {
           const anchor = PROJECT_ANCHORS.find((a) => a.id === project.id);
           return <Project key={project.id} project={project} reverse={anchor?.side === 1} />;
         })}
-        <Signature />
         <Skills />
+        <BeyondWork />
         <Contact />
       </div>
       {showDebug && <DebugOverlay />}

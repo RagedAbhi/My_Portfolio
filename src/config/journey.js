@@ -27,39 +27,40 @@ import * as THREE from 'three';
 // against these new ones automatically, rather than silently drifting.
 export const SECTION_VH_DESKTOP = {
   hero: 100,
-  about: 220,
+  about: 180,
+  experience: 160,
   work: 90,
   cuerates: 140,
   autotrack: 140,
   apple3d: 140,
-  signature: 140,
   skills: 110,
+  beyondWork: 130,
   contact: 120,
 };
 
-// Mobile: shorter, since sections stack vertically with less lateral travel.
-// Same about/signature adjustment ratio as desktop.
 export const SECTION_VH_MOBILE = {
   hero: 90,
-  about: 195,
+  about: 160,
+  experience: 160,
   work: 80,
   cuerates: 130,
   autotrack: 130,
   apple3d: 130,
-  signature: 125,
   skills: 130,
+  beyondWork: 130,
   contact: 110,
 };
 
 const SECTION_ORDER = [
   'hero',
   'about',
+  'experience',
   'work',
   'cuerates',
   'autotrack',
   'apple3d',
-  'signature',
   'skills',
+  'beyondWork',
   'contact',
 ];
 
@@ -99,23 +100,25 @@ export function computeSections(isMobile) {
 const LEGACY_SECTION_VH_DESKTOP = {
   hero: 100,
   about: 320,
+  experience: 160,
   work: 90,
   cuerates: 140,
   autotrack: 140,
   apple3d: 140,
-  signature: 100,
   skills: 110,
+  beyondWork: 130,
   contact: 120,
 };
 const LEGACY_SECTION_VH_MOBILE = {
   hero: 90,
   about: 280,
+  experience: 160,
   work: 80,
   cuerates: 130,
   autotrack: 130,
   apple3d: 130,
-  signature: 90,
   skills: 130,
+  beyondWork: 130,
   contact: 110,
 };
 
@@ -258,39 +261,24 @@ export const SPRING = {
 // computeSections() and the matching note on SIGNATURE_START below.
 const CAMERA_KEYFRAMES_DESKTOP_LEGACY = [
   { p: 0.0, z: 6.5, xOffset: -0.6, yOffset: 0.4 },
-  { p: 0.12, z: 6, xOffset: 0.3, yOffset: 0.3 },
+  { p: 0.12, z: 6.5, xOffset: 0.3, yOffset: 0.3 },
   { p: 0.26, z: 6.5, xOffset: -0.4, yOffset: 0.3 },
-  { p: 0.38, z: 7.5, xOffset: 0, yOffset: 0.4 },
+  { p: 0.38, z: 7.0, xOffset: 0, yOffset: 0.4 },
   { p: 0.48, z: 6.5, xOffset: 0.9, yOffset: 0.3 },
   { p: 0.6, z: 6.5, xOffset: -0.9, yOffset: 0.3 },
   { p: 0.72, z: 6.5, xOffset: 0.9, yOffset: 0.3 },
-  // These three line up exactly with the Signature DOM section's own
-  // global progress range so the pull-back-and-return happens while the
-  // user is actually scrolled through that section, not spilling into
-  // Skills. See signatureWeight() below — same numbers, same reason.
-  { p: 0.738, z: 8, xOffset: 0, yOffset: 0.5 },
-  // Signature dolly peak — pulled back far enough to reveal a generous
-  // recent arc of the thread (roughly Work-intro through this point, a
-  // ~13-unit vertical span at DEPTH_DESKTOP=30), not the whole journey
-  // from Hero (that would need to be so far back the thread goes
-  // invisible). camera.lookAt() re-centers on wherever we are, so this
-  // window naturally slides to show projects-and-forward above and
-  // skills/contact beginning below as progress moves through it.
-  { p: 0.778, z: 32, xOffset: 0, yOffset: -1 },
-  { p: 0.817, z: 7, xOffset: 0, yOffset: 0.4 },
-  { p: 0.94, z: 6, xOffset: -0.3, yOffset: 0.3 },
-  { p: 1.0, z: 5.5, xOffset: 0, yOffset: 0.3 },
+  { p: 0.817, z: 6.5, xOffset: 0, yOffset: 0.4 },
+  { p: 0.94, z: 6.0, xOffset: -0.3, yOffset: 0.3 },
+  { p: 1.0, z: 6.0, xOffset: 0, yOffset: 0.3 },
 ];
 
 const CAMERA_KEYFRAMES_MOBILE_LEGACY = [
   { p: 0.0, z: 8.5, xOffset: -0.2, yOffset: 0.3 },
-  { p: 0.12, z: 8, xOffset: 0.1, yOffset: 0.3 },
-  { p: 0.38, z: 9, xOffset: 0, yOffset: 0.3 },
+  { p: 0.12, z: 8.0, xOffset: 0.1, yOffset: 0.3 },
+  { p: 0.38, z: 8.5, xOffset: 0, yOffset: 0.3 },
   { p: 0.6, z: 8.5, xOffset: 0, yOffset: 0.3 },
-  { p: 0.73, z: 10, xOffset: 0, yOffset: 0.4 },
-  { p: 0.77, z: 23, xOffset: 0, yOffset: -0.8 },
-  { p: 0.809, z: 9, xOffset: 0, yOffset: 0.3 },
-  { p: 1.0, z: 8, xOffset: 0, yOffset: 0.3 },
+  { p: 0.77, z: 8.5, xOffset: 0, yOffset: 0.3 },
+  { p: 1.0, z: 8.0, xOffset: 0, yOffset: 0.3 },
 ];
 
 export const CAMERA_KEYFRAMES_DESKTOP = CAMERA_KEYFRAMES_DESKTOP_LEGACY.map((k) => ({
@@ -323,10 +311,8 @@ export const SIGNATURE_START = remapLegacyP(0.738, false);
 export const SIGNATURE_PEAK = remapLegacyP(0.778, false);
 export const SIGNATURE_END = remapLegacyP(0.817, false);
 
-export function signatureWeight(p) {
-  if (p <= SIGNATURE_START || p >= SIGNATURE_END) return 0;
-  if (p <= SIGNATURE_PEAK) return (p - SIGNATURE_START) / (SIGNATURE_PEAK - SIGNATURE_START);
-  return 1 - (p - SIGNATURE_PEAK) / (SIGNATURE_END - SIGNATURE_PEAK);
+export function signatureWeight() {
+  return 0;
 }
 
 // ---- Discipline "material story" -------------------------------------------
